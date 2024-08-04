@@ -281,7 +281,6 @@ Finds end of innermost nested class or method definition."
 	  (if (= 0 indentation)
 	      (setq not-finished nil)
 	    (while (= indentation (current-indentation))
-	      (message "%s %s" indentation (current-indentation))
 	      (cython-beginning-of-defun)))))
       (if accum (mapconcat 'identity accum ".")))))
 
