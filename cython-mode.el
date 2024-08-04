@@ -21,6 +21,22 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.pxi\\'" . cython-mode))
 
+(defmacro cython-rx (&rest regexps)
+  "Python mode specialized rx macro.
+This variant of `rx' supports common Python named REGEXPS."
+  `(rx-let ((sp-bsnl (or space (and ?\\ ?\n)))
+            (block-start       (seq symbol-start
+                                    (or "def" "cdef" "class" "if" "elif" "else" "try"
+                                        "except" "finally" "for" "while" "with"
+                                        ;; Python 3.10+ PEP634
+                                        "match" "case"
+                                        ;; Python 3.5+ PEP492
+                                        (and "async" (+ space)
+                                             (or "def" "for" "with"))
+                                        (and "cdef" (+ space) (or "def" "class")))))
+            (symbol-name       (seq (any letter ?_) (* (any word ?_))))
+            (open-arg-paren    "("))
+     (rx ,@regexps)))
 
 (defvar cython-buffer nil
   "Variable pointing to the cython buffer which was compiled.")
@@ -284,6 +300,44 @@ Finds end of innermost nested class or method definition."
 	      (cython-beginning-of-defun)))))
       (if accum (mapconcat 'identity accum ".")))))
 
+
+(defun cython-nav-beginning-of-block ()
+  "Move to start of current block."
+  (interactive "^")
+  (let ((starting-pos (point)))
+    ;; Go to first line beginning a statement
+    (while (and (not (bobp))
+                (or (and (python-nav-beginning-of-statement) nil)
+                    (python-info-current-line-comment-p)
+                    (python-info-current-line-empty-p)))
+      (forward-line -1))
+    (if (progn
+          (python-nav-beginning-of-statement)
+          (looking-at (cython-rx block-start)))
+        (point-marker)
+      (let ((block-matching-indent
+             (- (current-indentation) python-indent-offset)))
+        (while
+            (and (python-nav-backward-block)
+                 (> (current-indentation) block-matching-indent)))
+        (if (and (looking-at (cython-rx block-start))
+                 (= (current-indentation) block-matching-indent))
+            (point-marker)
+          (and (goto-char starting-pos) nil))))))
+
+
+(defun cython-mode--at-beginning-if-block (orig-context)
+  (message "This is cython-mode--at-beginning-if-block %s" orig-context)
+  (let ((start (save-excursion
+                 (back-to-indentation)
+                 (python-util-forward-comment -1)
+                 (when (equal (char-before) ?:)
+                   (cython-nav-beginning-of-block)))))
+    (if start
+        (cons :after-block-start start)
+      orig-context)))
+
+
 ;;;###autoload
 (define-derived-mode cython-mode python-mode "Cython"
   "Major mode for Cython development, derived from Python mode.
@@ -304,7 +358,12 @@ Finds end of innermost nested class or method definition."
        #'cython-current-defun)
   (add-hook 'which-func-functions #'cython-current-defun nil t)
   (add-to-list (make-local-variable 'compilation-finish-functions)
-               'cython-compilation-finish))
+               'cython-compilation-finish)
+  (advice-add 'python-indent-context :filter-return #'cython-mode--at-beginning-if-block))
+
+
+
+
 
 (provide 'cython-mode)
 
