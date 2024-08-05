@@ -112,7 +112,18 @@ This variant of `rx' supports common Python named REGEXPS."
           (+ space) (group (regexp "[a-zA-Z_]+[a-zA-Z0-9_]*")))
      (1 font-lock-keyword-face prepend) (2 font-lock-type-face))
     ("\\_<property[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
-     1 font-lock-function-name-face))
+     1 font-lock-function-name-face)
+    (,(cython-rx
+       symbol-start
+       "cdef" (+ space)
+       (group symbol-name) (* space) open-arg-paren)
+     (1 font-lock-function-name-face))
+    (,(cython-rx
+       symbol-start
+       "cdef" (+ space)
+       (group symbol-name) (+ space)
+       (group symbol-name) (* space) open-arg-paren)
+     (1 font-lock-type-face) (2 font-lock-function-name-face)))
   "Additional font lock keywords for Cython mode.")
 
 ;;;###autoload
