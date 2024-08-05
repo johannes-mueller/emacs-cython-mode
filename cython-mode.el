@@ -338,15 +338,14 @@ Finds end of innermost nested class or method definition."
 
 
 (defun cython-mode--at-beginning-if-block (orig-context)
-  (message "This is cython-mode--at-beginning-if-block %s" orig-context)
-  (let ((start (save-excursion
-                 (back-to-indentation)
-                 (python-util-forward-comment -1)
-                 (when (equal (char-before) ?:)
-                   (cython-nav-beginning-of-block)))))
-    (if start
-        (cons :after-block-start start)
-      orig-context)))
+  (if-let ((_ (eq major-mode 'cython-mode))
+           (start (save-excursion
+                    (back-to-indentation)
+                    (python-util-forward-comment -1)
+                    (when (equal (char-before) ?:)
+                      (cython-nav-beginning-of-block)))))
+      (cons :after-block-start start)
+    orig-context))
 
 
 ;;;###autoload
