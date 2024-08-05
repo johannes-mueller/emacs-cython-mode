@@ -35,7 +35,8 @@ This variant of `rx' supports common Python named REGEXPS."
                                              (or "def" "for" "with"))
                                         (and "cdef" (+ space) (or "def" "class")))))
             (symbol-name       (seq (any letter ?_) (* (any word ?_))))
-            (open-arg-paren    "("))
+            (open-arg-paren    "(")
+            (array-index (and "[" (*? any) "]")))
      (rx ,@regexps)))
 
 (defvar cython-buffer nil
@@ -121,7 +122,7 @@ This variant of `rx' supports common Python named REGEXPS."
     (,(cython-rx
        symbol-start
        "cdef" (+ space)
-       (group symbol-name) (+ space)
+       (group symbol-name) (opt array-index) (+ space)
        (group symbol-name) (* space) open-arg-paren)
      (1 font-lock-type-face) (2 font-lock-function-name-face)))
   "Additional font lock keywords for Cython mode.")
