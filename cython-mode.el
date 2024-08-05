@@ -124,6 +124,12 @@ This variant of `rx' supports common Python named REGEXPS."
        "cdef" (+ space)
        (group symbol-name) (opt array-index) (+ space)
        (group symbol-name) (* space) open-arg-paren)
+     (1 font-lock-type-face) (2 font-lock-function-name-face))
+    (,(cython-rx
+       symbol-start
+       "cdef" (+ space)
+       (group symbol-name) (opt array-index) (zero-or-more space)
+       ?( ?* (group symbol-name) ")" (* space) open-arg-paren)
      (1 font-lock-type-face) (2 font-lock-function-name-face)))
   "Additional font lock keywords for Cython mode.")
 
