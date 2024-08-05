@@ -26,14 +26,14 @@
 This variant of `rx' supports common Python named REGEXPS."
   `(rx-let ((sp-bsnl (or space (and ?\\ ?\n)))
             (block-start       (seq symbol-start
-                                    (or "def" "cdef" "class" "if" "elif" "else" "try"
+                                    (or "def" "cdef" "cpdef ""class" "if" "elif" "else" "try"
                                         "except" "finally" "for" "while" "with"
                                         ;; Python 3.10+ PEP634
                                         "match" "case"
                                         ;; Python 3.5+ PEP492
                                         (and "async" (+ space)
                                              (or "def" "for" "with"))
-                                        (and "cdef" (+ space) (or "def" "class")))))
+                                        (and "cdef" (+ space) "class"))))
             (symbol-name       (seq (any letter ?_) (* (any word ?_))))
             (open-arg-paren    "(")
             (array-index (and "[" (*? any) "]")))
@@ -116,18 +116,18 @@ This variant of `rx' supports common Python named REGEXPS."
      1 font-lock-function-name-face)
     (,(cython-rx
        symbol-start
-       "cdef" (+ space)
+       (or "cdef" "cpdef") (+ space)
        (group symbol-name) (* space) open-arg-paren)
      (1 font-lock-function-name-face))
     (,(cython-rx
        symbol-start
-       "cdef" (+ space)
+       (or "cdef" "cpdef") (+ space)
        (group symbol-name) (opt array-index) (+ space)
        (group symbol-name) (* space) open-arg-paren)
      (1 font-lock-type-face) (2 font-lock-function-name-face))
     (,(cython-rx
        symbol-start
-       "cdef" (+ space)
+       (or "cdef" "cpdef") (+ space)
        (group symbol-name) (opt array-index) (zero-or-more space)
        ?( ?* (group symbol-name) ")" (* space) open-arg-paren)
      (1 font-lock-type-face) (2 font-lock-function-name-face)))
